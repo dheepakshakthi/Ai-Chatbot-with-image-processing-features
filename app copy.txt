@@ -15,7 +15,7 @@ from transformers import BlipProcessor, BlipForConditionalGeneration
 
 app = Flask(__name__)
 device = "cuda" if torch.cuda.is_available() else "cpu"
-API_KEY = 'AIzaSyDMwil4Z3JWw0CTocWKbmM6NYjbd3xP14E'
+API_KEY = 'API_KEY'
 
 # Load the image generation pipeline
 model_id = "CompVis/stable-diffusion-v1-4"
