@@ -10,3 +10,5 @@ As said, google's gemini api is used for the chatbot. You can replace the api ke
 <br><br>
 Mask-R-CNN model and COCO dataset is used for object detection, BLIP image captioning model is used for cpation generation for images and Stable diffusion model is used for image generation.
 
+<h2>Recomended System Requirements:</h2>
+a PC or laptop with dedicated graphics card (with cuda cores)
