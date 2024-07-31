@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HERCULES-GPT</title>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<style>
+:root {
+  color-scheme: dark;
+}
+
+body {
+    font-family: consolas;
+    background-color: #2f2f2f;
+    color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+}
+
+header {
+    background-color: #2f2f2f;
+    padding-left: 10px;
+    padding-top: 5px;
+    text-align: left;
+}
+
+header p {
+    margin: 0;
+}
+
+.chat-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+    margin: 1px auto;
+    overflow: auto;
+    border: 1px solid #2f2f2f;
+}
+
+.chat-box {
+    flex: 1;
+    border: 1px solid #2f2f2f;
+    padding-left: 5%;
+    padding-right: 5%;
+    background-color: #2f2f2f;
+}
+
+.message {
+    margin: 10px 0;
+}
+
+.user-message {
+    text-align: right;
+}
+
+.bot-message {
+    text-align: left;
+}
+
+footer {
+    background-color: #2f2f2f;
+    padding: 10px 0;
+    border-top: 1px solid #2f2f2f;
+}
+
+.footer-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.input-group {
+    max-width: 1000px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.form-control {
+    background-color: #464646;
+    border: 1px solid #464646;
+    color: #ffffff;
+    height: 50px;
+}
+
+#message-input {
+    color: #ffffff;
+}
+input:not(:placeholder-shown) {
+    background-color: #464646!important;
+}
+input:placeholder-shown {
+    background-color: #464646!important;
+}
+.btn {
+    background-color: #464646;
+    border: 1px solid #464646;
+    height: 50px;
+}
+.btn:valid {
+background-color: #464646!important;
+}
+.img-pros {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    height: 50px;
+}
+
+.img-gen, .img-obj, .img-cap {
+    background-color: black;
+    color: #ffffff;
+    border-radius: 5px;
+    height: 50px;
+    width: 300px;
+    border: 1px solid black;
+    margin: 5px; /* Add margin for spacing */
+}
+
+#generated-image {
+    max-width: 100%;
+    height: auto;
+    margin-top: 20px;
+}
+</style>
+</head>
+<body>
+<header style="display: flex; justify-content: left;">
+    <p style="font-size: 30px; padding-left: 10px;">HERCULES-GPT</p>
+    <p style="font-size: 15px; padding-top: 15px; padding-left: 10px;">(Powered by gemini)</p>
+</header>
+
+<div class="container chat-container">
+    <div class="chat-box" id="chat-box">
+        <!-- Messages will be appended here -->
+    </div>
+</div>
+
+<footer>
+    <div class="footer-container">
+        <div class="input-group chat-input">
+            <div class="input-group-prepend">
+                <button class="btn btn-primary" id="mic-button">&#x1F3A4;</button>
+            </div>
+            <input type="text" class="form-control" id="message-input" placeholder="Type a message...">
+            <div class="input-group-append">
+                <button class="btn btn-primary" id="send-button">--></button>
+            </div>
+        </div>
+        <div class="img-pros">
+            <button class="img-gen" onclick="generateImage()">Generate Image</button>
+            <input type="file" id="image-upload" style="display: none;" onchange="detectObjects(event)">
+            <button class="img-obj" onclick="document.getElementById('image-upload').click();">Detect Object (jpg/jpeg)</button>
+            <input type="file" id="image-caption" style="display: none;" onchange="generateCaption(event)">
+            <button class="img-cap" onclick="document.getElementById('image-caption').click();">Generate Caption (jpg/png/jpeg)</button>
+        </div>
+    </div>
+</footer>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<script>
+// Existing JavaScript code here
+document.getElementById('send-button').addEventListener('click', function() {
+    sendMessage();
+});
+
+document.getElementById('message-input').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+});
+
+document.getElementById('mic-button').addEventListener('click', function() {
+    toggleRecognition();
+});
+
+let recognition;
+let isListening = false;
+
+function sendMessage() {
+    var messageInput = document.getElementById('message-input');
+    var message = messageInput.value;
+    if (message.trim() === '') return;
+
+    var chatBox = document.getElementById('chat-box');
+
+    // Append user's message to chat box
+    var userMessage = document.createElement('div');
+    userMessage.classList.add('message', 'user-message');
+    userMessage.innerText = message;
+    chatBox.appendChild(userMessage);
+
+    // Scroll to the bottom of the chat box
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    messageInput.value = '';
+
+    fetch('/send_message', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: message })
+    })
+    .then(response => response.json())
+    .then(data => {
+        var botMessage = document.createElement('div');
+        var responseText = data.response;
+
+        // Handle annotations for bold, italic, and heading
+        responseText = responseText.replace(/(\*\*(.*?)\*\*)/g, '<b>$2</b>'); // Bold
+        responseText = responseText.replace(/(\*(.*?)\*)/g, '<i>$2</i>'); // Italic
+        responseText = responseText.replace(/(\|\|(.*?)\|\|)/g, '<h2>$2</h2>'); // Heading
+
+        // Add HTML tags for line breaks and indentation
+        responseText = responseText.replace(/\n/g, '<br>'); // Line breaks
+        responseText = responseText.replace(/^(\s+)/g, '<span style="padding-left: $1;">'); // Indentation
+
+        botMessage.innerHTML = responseText;
+        botMessage.classList.add('message', 'bot-message');
+        chatBox.appendChild(botMessage);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function generateImage() {
+    var messageInput = document.getElementById('message-input');
+    var prompt = messageInput.value;
+    if (prompt.trim() === '') return;
+
+    var chatBox = document.getElementById('chat-box');
+
+    // Append user's prompt to chat box
+    var userMessage = document.createElement('div');
+    userMessage.classList.add('message', 'user-message');
+    userMessage.innerText = prompt;
+    chatBox.appendChild(userMessage);
+
+    // Scroll to the bottom of the chat box
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    fetch('/generate_image', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ prompt: prompt })
+    })
+    .then(response => response.json())
+    .then(data => {
+        var imageStr = data.image;
+        var botMessage = document.createElement('div');
+        botMessage.classList.add('message', 'bot-message');
+        var imgElement = document.createElement('img');
+        imgElement.src = 'data:image/png;base64,' + imageStr;
+        imgElement.style.maxWidth = '100%';
+        botMessage.appendChild(imgElement);
+        chatBox.appendChild(botMessage);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function detectObjects(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+
+    var formData = new FormData();
+    formData.append('file', file);
+
+    fetch('/detect_objects', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        var chatBox = document.getElementById('chat-box');
+        var botMessage = document.createElement('div');
+        botMessage.classList.add('message', 'bot-message');
+
+        var img = document.createElement('img');
+        img.src = 'data:image/png;base64,' + data.image;
+        img.id = 'detected-objects-image';
+        img.style.maxWidth = '100%';
+        botMessage.appendChild(img);
+        chatBox.appendChild(botMessage);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+function generateCaption(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+
+  var formData = new FormData();
+  formData.append('file', file);
+
+  fetch('/generate_caption', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    var chatBox = document.getElementById('chat-box');
+  var botMessage = document.createElement('div');
+  botMessage.classList.add('message', 'bot-message');
+
+  var container = document.createElement('div');
+  container.style.display = 'block';
+
+  var img = document.createElement('img');
+  img.src = 'data:image/png;base64,' + data.image;
+  img.style.maxWidth = '100%';
+  container.appendChild(img);
+
+  var caption = document.createElement('div');
+  caption.innerText = data.caption;
+  container.appendChild(caption);
+
+  botMessage.appendChild(container);
+  chatBox.appendChild(botMessage);
+  chatBox.scrollTop = chatBox.scrollHeight;
+  })
+  .catch(error => console.error('Error:', error));
+}
+
+function toggleRecognition() {
+    if (isListening) {
+        recognition.stop();
+        isListening = false;
+        document.getElementById('mic-button').innerHTML = '&#x1F3A4;';
+    } else {
+        recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        recognition.onresult = function(event) {
+            var transcript = event.results[0][0].transcript;
+            document.getElementById('message-input').value = transcript;
+        };
+
+        recognition.onerror = function(event) {
+            console.error('Speech recognition error:', event.error);
+        };
+
+        recognition.onend = function() {
+            if (isListening) {
+                recognition.start();
+            }
+        };
+
+        recognition.start();
+        isListening = true;
+        document.getElementById('mic-button').innerHTML = '&#x1F3A4; (Listening)';
+    }
+}
+</script>
+</body>
+</html>
