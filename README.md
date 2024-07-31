@@ -5,6 +5,10 @@ Our primary goal for this project was to create a chabot which can analyze is en
 This project is a prototype.
 
 This project is written using python language. <br>
-We used flask to create this as a web application. As said, google's gemini api is used for the chatbot. You can replace the api key with your own api key.<br>
+We used flask to create this as a web application. <br>
+As said, google's gemini api is used for the chatbot. <br>
+![image](https://github.com/user-attachments/assets/e8f4838b-eb82-49ea-a3f5-8888a3fcd993)
+
+You can replace the api key with your own api key.<br>
 Mask-R-CNN model and COCO dataset is used for object detection, BLIP image captioning model is used for cpation generation for images and Stable diffusion model is used for image generation.
 
