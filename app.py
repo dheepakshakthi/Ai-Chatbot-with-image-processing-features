@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify
 import google.generativeai as ai
 import io
 from diffusers import StableDiffusionPipeline, DPMSolverMultistepScheduler
+from diffusers import EulerDiscreteScheduler
 from io import BytesIO
 import base64
 import torch
@@ -14,14 +15,23 @@ from pycocotools.coco import COCO
 from transformers import BlipProcessor, BlipForConditionalGeneration
 
 app = Flask(__name__)
-device = "cuda" if torch.cuda.is_available() else "cpu"
+
+if torch.cuda.is_available() == True:
+    device = "cuda"
+    print("using device CUDA")
+else:
+    device = "cpu"
+    print("using device CPU")
+    
 API_KEY = 'API_KEY'
 
 
 model_id = "CompVis/stable-diffusion-v1-4"
 pipeline = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float32)
-pipeline.scheduler = DPMSolverMultistepScheduler.from_config(pipeline.scheduler.config)
+pipeline.scheduler = EulerDiscreteScheduler.from_config(pipeline.scheduler.config)
 pipeline = pipeline.to(device)
+pipeline.safety_checker = None
+
 
 
 coco = COCO('D:/college docs/1st year internship/prototype_test_14/instances_val2017.json')  
