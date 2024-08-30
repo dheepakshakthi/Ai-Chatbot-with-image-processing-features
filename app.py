@@ -25,34 +25,27 @@ else:
     
 API_KEY = 'API_KEY'
 
-
 model_id = "CompVis/stable-diffusion-v1-4"
 pipeline = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float32)
 pipeline.scheduler = EulerDiscreteScheduler.from_config(pipeline.scheduler.config)
 pipeline = pipeline.to(device)
 pipeline.safety_checker = None
 
-
-
-coco = COCO('D:/college docs/1st year internship/prototype_test_14/instances_val2017.json')  
+coco = COCO('instances_val2017.json')  
 cats = coco.loadCats(coco.getCatIds())
 cat_id_to_name = {cat['id']: cat['name'] for cat in cats}
 
-
 detection_model = torchvision.models.detection.maskrcnn_resnet50_fpn(weights=torchvision.models.detection.MaskRCNN_ResNet50_FPN_Weights.DEFAULT)
 detection_model.eval()
-
 
 model_id_2 = "Salesforce/blip-image-captioning-base"
 processor = BlipProcessor.from_pretrained(model_id_2)
 model = BlipForConditionalGeneration.from_pretrained(model_id_2).to(device)
 
 def load_image(image_path):
-    """Loads an image from the given file path."""
     return Image.open(image_path).convert("RGB")
 
 def generate_caption(image, model, processor, max_new_tokens=50):
-    """Generates a caption for the given image using the specified model and processor."""
     inputs = processor(image, return_tensors="pt").to(device)
     out = model.generate(**inputs, max_new_tokens=max_new_tokens)
     caption = processor.decode(out[0], skip_special_tokens=True)
