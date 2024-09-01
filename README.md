@@ -22,7 +22,7 @@ The full path of the COCO anotations file "instances_val2017.json" should be giv
 a PC or laptop with dedicated graphics card (with cuda cores)
 
 <h1>Problems and fixes</h1>
-Some of you guys might get a error like this one below: <br><br>
+Some of you guys might get an error like this one below: <br><br>
 <pre>
 Traceback (most recent call last):
   File "d:\testing\Web_Ai_Chatbot-master\app.py", line 4, in <module>
