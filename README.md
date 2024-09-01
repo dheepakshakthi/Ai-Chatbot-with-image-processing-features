@@ -21,7 +21,7 @@ The full path of the COCO anotations file "instances_val2017.json" should be giv
 <h2>Recomended System Requirements:</h2>
 a PC or laptop with dedicated graphics card (with cuda cores)
 
-<h1>Note!</h1>
+<h1>Problems and fixes</h1>
 Some of you guys might get a error like this one below: <br><br>
 <pre>
 Traceback (most recent call last):
