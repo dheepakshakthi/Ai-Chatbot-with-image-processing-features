@@ -44,8 +44,8 @@ header p {
 .chat-box {
     flex: 1;
     border: 1px solid #2f2f2f;
-    padding-left: 5%;
-    padding-right: 5%;
+    padding-left: 15%;
+    padding-right: 15%;
     background-color: #2f2f2f;
     overflow-y: scroll;
     scroll-behavior: smooth;
@@ -114,14 +114,14 @@ background-color: #464646!important;
     height: 50px;
 }
 
-.img-gen, .img-obj, .img-cap {
+.img-obj{
     background-color: black;
     color: #ffffff;
     border-radius: 5px;
     height: 50px;
     width: 300px;
     border: 1px solid black;
-    margin: 5px; /* Add margin for spacing */
+    margin: 5px;
 }
 
 #generated-image {
@@ -155,11 +155,9 @@ background-color: #464646!important;
             </div>
         </div>
         <div class="img-pros">
-            <button class="img-gen" onclick="generateImage()">Generate Image</button>
             <input type="file" id="image-upload" style="display: none;" onchange="detectObjects(event)">
-            <button class="img-obj" onclick="document.getElementById('image-upload').click();">Detect Object (jpg/jpeg)</button>
+            <button class="img-obj" onclick="document.getElementById('image-upload').click();">Try the Object Detection feature!! (jpg/jpeg)</button>
             <input type="file" id="image-caption" style="display: none;" onchange="generateCaption(event)">
-            <button class="img-cap" onclick="document.getElementById('image-caption').click();">Generate Caption (jpg/png/jpeg)</button>
         </div>
     </div>
 </footer>
@@ -168,7 +166,6 @@ background-color: #464646!important;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 <script>
-// Existing JavaScript code here
 document.getElementById('send-button').addEventListener('click', function() {
     sendMessage();
 });
@@ -188,8 +185,9 @@ let isListening = false;
 
 function sendMessage() {
     var messageInput = document.getElementById('message-input');
-    var message = messageInput.value;
-    if (message.trim() === '') return;
+    var message = messageInput.value.trim();
+
+    if (message === '') return;
 
     var chatBox = document.getElementById('chat-box');
 
@@ -198,39 +196,60 @@ function sendMessage() {
     userMessage.classList.add('message', 'user-message');
     userMessage.innerText = message;
     chatBox.appendChild(userMessage);
-
-    // Scroll to the bottom of the chat box
     chatBox.scrollTop = chatBox.scrollHeight;
-
     messageInput.value = '';
 
-    fetch('/send_message', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ message: message })
-    })
-    .then(response => response.json())
-    .then(data => {
-        var botMessage = document.createElement('div');
-        var responseText = data.response;
+    // Check if the message starts with "generate image"
+    if (message.toLowerCase().startsWith('generate image')) {
+        fetch('/generate_image', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ prompt: message })
+        })
+        .then(response => response.json())
+        .then(data => {
+            var imageStr = data.image;
+            var botMessage = document.createElement('div');
+            botMessage.classList.add('message', 'bot-message');
+            var imgElement = document.createElement('img');
+            imgElement.src = 'data:image/png;base64,' + imageStr;
+            imgElement.style.maxWidth = '100%';
+            botMessage.appendChild(imgElement);
+            chatBox.appendChild(botMessage);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        })
+        .catch(error => console.error('Error:', error));
 
-        // Handle annotations for bold, italic, and heading
-        responseText = responseText.replace(/(\*\*(.*?)\*\*)/g, '<b>$2</b>'); // Bold
-        responseText = responseText.replace(/(\*(.*?)\*)/g, '<i>$2</i>'); // Italic
-        responseText = responseText.replace(/(\|\|(.*?)\|\|)/g, '<h2>$2</h2>'); // Heading
+    } else if (message.toLowerCase().startsWith('generate caption')) {
+        // Trigger the file input for caption generation
+        document.getElementById('image-caption').click();
+    } else {
+        fetch('/send_message', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: message })
+        })
+        .then(response => response.json())
+        .then(data => {
+            var botMessage = document.createElement('div');
+            var responseText = data.response;
 
-        // Add HTML tags for line breaks and indentation
-        responseText = responseText.replace(/\n/g, '<br>'); // Line breaks
-        responseText = responseText.replace(/^(\s+)/g, '<span style="padding-left: $1;">'); // Indentation
+            responseText = responseText.replace(/(\*\*(.*?)\*\*)/g, '<b>$2</b>'); // Bold
+            responseText = responseText.replace(/(\*(.*?)\*)/g, '<i>$2</i>'); // Italic
+            responseText = responseText.replace(/(\|\|(.*?)\|\|)/g, '<h2>$2</h2>'); // Heading
+            responseText = responseText.replace(/\n/g, '<br>'); // Line breaks
 
-        botMessage.innerHTML = responseText;
-        botMessage.classList.add('message', 'bot-message');
-        chatBox.appendChild(botMessage);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    })
-    .catch(error => console.error('Error:', error));
+            botMessage.innerHTML = responseText;
+            botMessage.classList.add('message', 'bot-message');
+            chatBox.appendChild(botMessage);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        })
+        .catch(error => console.error('Error:', error));
+    }
 }
 
 function generateImage() {
@@ -300,40 +319,41 @@ function detectObjects(event) {
 }
 
 function generateCaption(event) {
-  var file = event.target.files[0];
-  if (!file) return;
+    var file = event.target.files[0];
+    if (!file) return;
 
-  var formData = new FormData();
-  formData.append('file', file);
+    var formData = new FormData();
+    formData.append('file', file);
 
-  fetch('/generate_caption', {
-    method: 'POST',
-    body: formData
-  })
-  .then(response => response.json())
-  .then(data => {
-    var chatBox = document.getElementById('chat-box');
-  var botMessage = document.createElement('div');
-  botMessage.classList.add('message', 'bot-message');
+    fetch('/generate_caption', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        var chatBox = document.getElementById('chat-box');
+        var botMessage = document.createElement('div');
+        botMessage.classList.add('message', 'bot-message');
 
-  var container = document.createElement('div');
-  container.style.display = 'block';
+        var container = document.createElement('div');
+        container.style.display = 'block';
 
-  var img = document.createElement('img');
-  img.src = 'data:image/png;base64,' + data.image;
-  img.style.maxWidth = '100%';
-  container.appendChild(img);
+        var img = document.createElement('img');
+        img.src = 'data:image/png;base64,' + data.image;
+        img.style.maxWidth = '100%';
+        container.appendChild(img);
 
-  var caption = document.createElement('div');
-  caption.innerText = data.caption;
-  container.appendChild(caption);
+        var caption = document.createElement('div');
+        caption.innerText = data.caption;
+        container.appendChild(caption);
 
-  botMessage.appendChild(container);
-  chatBox.appendChild(botMessage);
-  chatBox.scrollTop = chatBox.scrollHeight;
-  })
-  .catch(error => console.error('Error:', error));
+        botMessage.appendChild(container);
+        chatBox.appendChild(botMessage);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    })
+    .catch(error => console.error('Error:', error));
 }
+
 
 function toggleRecognition() {
     if (isListening) {
