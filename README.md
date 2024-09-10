@@ -1,5 +1,11 @@
-<h1>About the project: </h1>
+<center>
+<h1>Hercules-GPT</h1>
+![image](https://github.com/user-attachments/assets/101184a7-ca66-4709-b63f-3916335c7c73)
+![Image](https://github.com/user-attachments/assets/de4d71a1-4c0e-4618-accf-cfae621cc3cf)
+![image](https://github.com/user-attachments/assets/6155da2b-1256-48ce-bbc5-97ed692b19bb)
 
+</center>
+<h2>About the project: </h2>
 This is a web ai chatbot powered by google gemini. It has image processing features such as object detection, caption generation and image generation. 
 Our primary goal for this project was to create a chabot which can analyze is environment with its image processing features.  
 This project is a prototype.
