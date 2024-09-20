@@ -22,7 +22,7 @@ You can also change between "DPMSolverMultistepScheduler" and "EulerDiscreteSche
 The full path of the COCO anotations file "instances_val2017.json" should be given <br>
 ![image](https://github.com/user-attachments/assets/cf10800e-297a-4d93-8337-d6a165abd08f)
 <br>
-The full path of RRDB_ESRGAN_x4.pth file should be given <br>
+The full path of RRDB_ESRGAN_x4.pth model should be given (model is present in models folder) <br>
 ![image](https://github.com/user-attachments/assets/8e720dc0-b700-4aa0-a9ac-2eb06aff378e) <br>
 The full path of instances_val2017.json file should be given <br>
 ![image](https://github.com/user-attachments/assets/bce9b3cc-fc5a-457b-8909-16d8fe867f54)
