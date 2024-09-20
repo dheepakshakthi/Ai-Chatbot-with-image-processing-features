@@ -65,7 +65,7 @@ header p {
 
 footer {
     background-color: #2f2f2f;
-    padding: 10px 0;
+    padding: 5px 0;
     border-top: 1px solid #2f2f2f;
 }
 
@@ -109,9 +109,9 @@ background-color: #464646!important;
 .img-pros {
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 0px;
     flex-wrap: wrap;
-    height: 50px;
+    height: 0px;
 }
 
 .img-obj{
@@ -156,7 +156,7 @@ background-color: #464646!important;
         </div>
         <div class="img-pros">
             <input type="file" id="image-upload" style="display: none;" onchange="detectObjects(event)">
-            <button class="img-obj" onclick="document.getElementById('image-upload').click();">Try the Object Detection feature!! (jpg/jpeg)</button>
+            <input type="file" id="image-enhance" style="display: none;" onchange="enhanceImage(event)">
             <input type="file" id="image-caption" style="display: none;" onchange="generateCaption(event)">
         </div>
     </div>
@@ -180,6 +180,10 @@ document.getElementById('mic-button').addEventListener('click', function() {
     toggleRecognition();
 });
 
+document.getElementById('image-enhance').addEventListener('change', function(event) {
+    enhanceImage(event);
+});
+
 let recognition;
 let isListening = false;
 
@@ -191,7 +195,6 @@ function sendMessage() {
 
     var chatBox = document.getElementById('chat-box');
 
-    // Append user's message to chat box
     var userMessage = document.createElement('div');
     userMessage.classList.add('message', 'user-message');
     userMessage.innerText = message;
@@ -199,8 +202,9 @@ function sendMessage() {
     chatBox.scrollTop = chatBox.scrollHeight;
     messageInput.value = '';
 
-    // Check if the message starts with "generate image"
-    if (message.toLowerCase().startsWith('generate image')) {
+    if (message.toLowerCase().startsWith('enhance image')) {
+        document.getElementById('image-enhance').click();
+    } else if (message.toLowerCase().startsWith('generate image')) {
         fetch('/generate_image', {
             method: 'POST',
             headers: {
@@ -222,8 +226,9 @@ function sendMessage() {
         })
         .catch(error => console.error('Error:', error));
 
+    } else if (message.toLowerCase().startsWith('detect objects')) {
+        document.getElementById('image-upload').click();
     } else if (message.toLowerCase().startsWith('generate caption')) {
-        // Trigger the file input for caption generation
         document.getElementById('image-caption').click();
     } else {
         fetch('/send_message', {
@@ -252,6 +257,37 @@ function sendMessage() {
     }
 }
 
+function enhanceImage(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+
+    var formData = new FormData();
+    formData.append('file', file);
+
+    fetch('/enhance_image', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        var chatBox = document.getElementById('chat-box');
+        
+        var botMessage = document.createElement('div');
+        botMessage.classList.add('message', 'bot-message');
+        
+        var img = document.createElement('img');
+        img.src = 'data:image/png;base64,' + data.enhanced_image;
+        img.style.maxWidth = '100%';
+        
+        botMessage.appendChild(img);
+        
+        chatBox.appendChild(botMessage);
+        
+        chatBox.scrollTop = chatBox.scrollHeight;
+    })
+    .catch(error => console.error('Error:', error));
+}
+
 function generateImage() {
     var messageInput = document.getElementById('message-input');
     var prompt = messageInput.value;
@@ -259,13 +295,11 @@ function generateImage() {
 
     var chatBox = document.getElementById('chat-box');
 
-    // Append user's prompt to chat box
     var userMessage = document.createElement('div');
     userMessage.classList.add('message', 'user-message');
     userMessage.innerText = prompt;
     chatBox.appendChild(userMessage);
 
-    // Scroll to the bottom of the chat box
     chatBox.scrollTop = chatBox.scrollHeight;
 
     fetch('/generate_image', {
