@@ -37,7 +37,6 @@ The full path of instances_val2017.json file should be given <br>
 a PC or laptop with dedicated graphics card (with cuda cores)
 
 <h1>Problems and fixes</h1>
-feel free to contact if any problems are found in this prototype <br>
 Some of you guys might get an error like this one below: <br><br>
 <pre>
 Traceback (most recent call last):
