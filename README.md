@@ -1,5 +1,7 @@
-<h1>About the project: </h1>
-
+<h1>Hercules-GPT</h1>
+for image generation type : generate image 'prompt' <br>
+for caption generation type : generate caption
+<h2>About the project: </h2>
 This is a web ai chatbot powered by google gemini. It has image processing features such as object detection, caption generation and image generation. 
 Our primary goal for this project was to create a chabot which can analyze is environment with its image processing features.  
 This project is a prototype.
@@ -10,7 +12,7 @@ As said, google's gemini api is used for the chatbot. You can replace the api ke
 <br><br>
 Mask-R-CNN model and COCO dataset is used for object detection, BLIP image captioning model is used for cpation generation for images and Stable diffusion model is used for image generation.
 <br><br>
-You can change between "float32" and "float16" according to our need. <br>
+You can change between "float32" and "float16" according to our need (float16 is faster and recomended if you have vram less than or equal to 4gb). <br>
 You can also change between "DPMSolverMultistepScheduler" and "EulerDiscreteScheduler".
 ![image](https://github.com/user-attachments/assets/3e310cc1-ed9b-4897-a771-e38190041857)
 <br><br>
